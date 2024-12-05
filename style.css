@@ -1,0 +1,246 @@
+/*
+111550097 蔣昀成 第4次作業 11/17
+111550097 Yun-Cheng Chiang The Fourth Homework 11/17
+*/
+body {
+    font-family: Arial, sans-serif;
+    background-color: #0f0f1a;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.game-container {
+    width: 50%; /* Set to a percentage or specific pixel value */
+    max-width: 1200px;
+    background-color: #1b1b32;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    text-align: center;
+}
+
+.card-hand {
+    display: flex;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.controls button {
+    margin: 5px;
+    padding: 10px 20px;
+    font-size: 16px;
+    color: #fff;
+    background: linear-gradient(135deg, #2b2b5c, #24244d);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Hover effect */
+button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+    transform: scale(1.05); /* Slightly enlarge button */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow on hover */
+}
+
+button.locked {
+    background-color: #6c757d; /* A darker gray to indicate disabled state */
+    color: #d6d6d6; /* Lighter text color for contrast */
+    cursor: not-allowed; /* Change cursor to a "not-allowed" icon */
+    box-shadow: none; /* Remove shadow */
+    transform: none; /* Disable scaling effects */
+    pointer-events: none; /* Prevent hover and click effects */
+}
+
+/* Optional: Add a slight opacity to make it look even more inactive */
+button.locked {
+    opacity: 0.7;
+}
+
+.label-block {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+    font-size: 1.5rem;
+    background-color: #2b2b5c;
+    color: #f3f3f3;
+    font-weight: bold;
+}
+
+.card-image {
+    width: 180px;  /* Adjust size as needed */
+    height: auto;
+    margin-right: 5px;  /* Space between cards */
+}
+
+.card-container {
+    perspective: 1000px;
+    width: 80px;
+    height: 120px;
+    display: inline-block;
+    margin-right: 50px;
+    /*margin: auto;*/
+}
+
+.card {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.6s ease-in-out;
+}
+
+.card-front, .card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+}
+
+.card-front {
+    transform: rotateY(0deg);
+}
+
+.card-back {
+    transform: rotateY(180deg);
+}
+
+.card.flipped {
+    transform: rotateY(180deg);
+}
+
+.card img {
+    width: 100%; /* Image fits container */
+    height: 100%; /* Maintain aspect ratio */
+    object-fit: cover; /* Ensure the image fills the container properly */
+    border-radius: 8px; /* Optional: Rounded corners for a modern look */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional: Add a shadow */
+}
+
+.score-circle {
+    width: 60px; /* Circle size */
+    height: 60px; /* Circle size */
+    border-radius: 50%; /* Makes it a circle */
+    background-color: #007BFF; /* Blue background */
+    color: white; /* White text color */
+    font-size: 1.5rem; /* Font size for score */
+    font-weight: bold; /* Bold text */
+    display: flex; /* Center the text */
+    justify-content: center; /* Center the text horizontally */
+    align-items: center; /* Center the text vertically */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add a shadow for depth */
+    margin-top: 25px;
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* Dark overlay */
+    display: none; /* Initially hidden */
+    z-index: 999;
+}
+
+/* Bet input modal */
+.bet-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #45187a;
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    z-index: 1000; /* Above the overlay */
+    display: none; /* Initially hidden */
+    text-align: center;
+}
+
+.bet-modal input {
+    padding: 10px;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    width: 80%;
+}
+
+.bet-modal button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    background-color: #492b8f;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.bet-modal button:hover {
+    background-color: #26145c;
+}
+
+/* Disable background content while modal is active */
+#game-container {
+    pointer-events: auto; /* Prevent clicks on game content */
+}
+
+.history-container {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    /*background-color: white;
+    border: 1px solid #ddd;*/
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    z-index: 10;
+    font-family: Arial, sans-serif;
+}
+
+/* Styling the table */
+#history-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+#history-table th, #history-table td {
+    padding: 8px;
+    text-align: center;
+    border: 1px solid #ddd;
+}
+
+#history-table th {
+    background-color: #4b006e;
+}
+
+#restart-container {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1000; /* Ensures it stays on top of other elements */
+}
+
+#restart-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    background-color: #dc3545; /* Red background */
+    color: white; /* White text */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#restart-button:hover {
+    background-color: #c82333; /* Darker red on hover */
+}
+
+#restart-button:active {
+    background-color: #a71d2a; /* Even darker red on click */
+}

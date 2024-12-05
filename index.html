@@ -1,0 +1,62 @@
+<!--
+111550097 蔣昀成 第4次作業 11/17
+111550097 Yun-Cheng Chiang The Fourth Homework 11/17
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HW4_111550097_蔣昀成</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="restart-container">
+        <button onclick="game.restartGame()" id="restart-button">Restart</button>
+    </div>
+
+    <div id="overlay" class="overlay"></div>
+    <!-- Modal for entering the bet -->
+    <div id="bet-modal" class="bet-modal">
+        <h2>Enter Your Bet</h2>
+        <input type="number" id="bet-amount" placeholder="Enter Bet Amount"></input>
+        <button onclick="game.submitBet()" id="submit-bet">Confirm</button>
+    </div>
+    <div class="history-container">
+        <table id="history-table">
+            <thead>
+                <tr>
+                    <th>Round</th>
+                    <th>Bet</th>
+                    <th>Winner</th>
+                    <th>Chips Left</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Results will be appended here dynamically -->
+            </tbody>
+        </table>
+    </div>
+    <div class="game-container" id="game-container">
+        <img src="game.png" alt="title" style="height: 130px; width: 130px;">
+        <div class="label-block"> Your Hand</div>
+        <div id="player-hand" class="card-hand"></div>
+        <div class="label-block"> Dealer's Hand</div>
+        <div id="dealer-hand" class="card-hand"></div>
+
+        <div class="controls">
+            <button onclick="game.startRound()" id="start-button">New Round</button>
+            <button onclick="game.hit()" id="hit-button">Hit</button>
+            <button onclick="game.stand()" id="stand-button">Stand</button>
+        </div>
+
+        <div id="game-info">
+            <p>Chips Left: <span id="player-chips">100</span></p>
+            <p id="result"></p>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
