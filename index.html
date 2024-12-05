@@ -12,9 +12,47 @@
 </head>
 <body>
 
+    <div class="container" id="form-container">
+        <!-- Registration Form -->
+        <div id="register-form" style="display: none;">
+            <h2>Register</h2>
+            <div id="register-error" class="error"></div>
+            <form id="registration-form">
+                <label for="username">Username:</label>
+                <input type="text" id="username1" name="username" autocomplete="username" required>
+
+                <label for="password">Password:</label>
+                <input type="password" id="password1" name="password" autocomplete="new-password" required>
+
+                <button type="submit">Register</button>
+            </form>
+            <div class="toggle" onclick="toggleForm()">Already have an account? Login</div>
+        </div>
+
+        <!-- Login Form -->
+        <div id="login-form">
+            <h2>Login</h2>
+            <div id="login-error" class="error"></div>
+            <form id="login-form">
+                <label for="username">Username:</label>
+                <input type="text" id="username2" name="username" autocomplete="username" required>
+
+                <label for="password">Password:</label>
+                <input type="password" id="password2" name="password" autocomplete="current-password" required>
+
+                <button onclick="game.initGame()" type="submit">Login</button>
+            </form>
+            <div class="toggle" onclick="toggleForm()">Don't have an account? Register</div>
+        </div>
+
+        <div id="response-message"></div>
+    </div>
+
+    <!--
     <div id="restart-container">
         <button onclick="game.restartGame()" id="restart-button">Restart</button>
     </div>
+    -->
 
     <div id="overlay" class="overlay"></div>
     <!-- Modal for entering the bet -->
@@ -45,6 +83,9 @@
         <div class="label-block"> Dealer's Hand</div>
         <div id="dealer-hand" class="card-hand"></div>
 
+
+        <button onclick="game.restartGame()" id="restart-button">Restart</button>
+        <br>
         <div class="controls">
             <button onclick="game.startRound()" id="start-button">New Round</button>
             <button onclick="game.hit()" id="hit-button">Hit</button>
@@ -57,6 +98,80 @@
         </div>
     </div>
 
+    <script>
+
+        let userId = "";
+
+        function toggleForm() {
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            loginForm.style.display = loginForm.style.display === 'none' ? 'block' : 'none';
+            registerForm.style.display = registerForm.style.display === 'none' ? 'block' : 'none';
+        }
+        // Registration function
+        document.getElementById('registration-form').addEventListener('submit', async (e) => {
+            e.preventDefault(); // Prevent the default form submission behavior
+
+            const username = document.getElementById('username1').value;
+            const password = document.getElementById('password1').value;
+
+            try {
+                // Send the form data as JSON using fetch
+                const response = await fetch('http://localhost:8000/register.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const result = await response.json(); // Parse the JSON response
+
+                // Display the server response message
+                const responseMessage = document.getElementById('response-message');
+                if (result.error) {
+                    responseMessage.textContent = `Error: ${result.error}`;
+                    responseMessage.style.color = 'red';
+                } else {
+                    responseMessage.textContent = result.message;
+                    responseMessage.style.color = 'green';
+                }
+            } catch (error) {
+                console.error('An error occurred:', error);
+            }
+        });
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault(); // Prevent the default form submission behavior
+
+            const username = document.getElementById('username2').value;
+            const password = document.getElementById('password2').value;
+            console.log(username, password);
+            try {
+                // Send the form data as JSON using fetch
+                const response = await fetch('http://localhost:8000/login.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const result = await response.json(); // Parse the JSON response
+
+                // Display the server response message
+                const responseMessage = document.getElementById('response-message');
+                if (result.error) {
+                    responseMessage.textContent = `Error: ${result.error}`;
+                    responseMessage.style.color = 'red';
+                } else {
+                    responseMessage.textContent = "Successfully logged in as " + username + ".";
+                    responseMessage.style.color = 'green';
+                    userId = result.user_id;
+                    console.log("userid:", userId);
+                }
+            } catch (error) {
+                console.error('An error occurred:', error);
+            }
+        });
+
+    </script>
     <script src="main.js"></script>
 </body>
 </html>

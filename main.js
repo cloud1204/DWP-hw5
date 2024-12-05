@@ -12,11 +12,11 @@ class BlackjackGame {
         this.dealerHand = [];
         this.currentChips = 1000;
         this.placedBet = 0;
-        this.initGame();
+        this.history = []; // Store the game history results
+        //this.initGame();
         this.busy = false;
         this.isRoundOver = true;
         this.lock();
-        this.history = []; // Store the game history results
         this.round = 0; // Keep track of rounds
     }
 
@@ -36,12 +36,12 @@ class BlackjackGame {
         document.getElementById("stand-button").classList.remove("locked");
     }
 
-    initGame() {
-        this.loadGameData();
+    async initGame() {
+        await this.loadGameData();
         this.createDeck();
         this.updateUI();
         this.updateHistoryTable();
-        console.log("inited");    
+        console.log("inited", history);    
     }
 
     createDeck() {
@@ -50,38 +50,73 @@ class BlackjackGame {
         this.deck = suits.flatMap(suit => values.map(value => ({ suit, value })));
     }
 
-    loadGameData() {
-        const data = JSON.parse(localStorage.getItem('blackjackData')) || 
-                        JSON.parse(sessionStorage.getItem('blackjackData')) || [];
-        if (data) {
-            this.gameData = data.gameData || [];
-            this.history = data.history || [];
-            this.round = data.round || 0;
-            this.currentChips = data.currentChips || 1000;
-            console.log("yo!", data.round);
-        } else {
-            this.gameData = [];
-            this.history = [];
-            this.round = 0;
-            this.currentChips = 1000;
+    async loadGameData() {
+        try {
+            const response = await fetch('http://localhost:8000/loadgame.php', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                console.error('Error:', data.error);
+                alert(data.error); // Show error message to the user
+            } else {
+                console.log('Game Data Loaded:', data.data);
+
+                // Handle the game data, for example:
+                this.currentChips = data.data.current_chips;
+                this.history = JSON.parse(data.data.history);  // Assuming history is JSON
+                this.round = data.data.round;
+
+                // Now you can safely log the history after the data has been loaded
+                console.log("inited, history:", this.history);
+            }
+        } catch (error) {
+            console.error('Error fetching game data:', error);
+            alert('Failed to load game data. Please try again.');
         }
     }
 
     saveGameData(reset = false) {
-        const dataToSave = {
-            gameData: this.gameData,
-            history: this.history,
-            round: this.round,
-            currentChips: this.currentChips,
-        };
-        if (reset){
-            dataToSave.history = [];
-            dataToSave.round = 0;
-            dataToSave.currentChips = 1000;
+
+        // Get the current user data from sessionStorage or cookies??
+
+        if (!userId) {
+            console.error("User is not logged in.");
+            return;
         }
-        console.log("ya!", dataToSave.round);
-        localStorage.setItem('blackjackData', JSON.stringify(dataToSave));
-        sessionStorage.setItem('blackjackData', JSON.stringify(dataToSave));
+
+        // Create the data object to send in the POST request
+        const gameData = {
+            currentChips: this.currentChips,
+            history: this.history, // Assuming history is an array
+            round: this.round
+        };
+
+        // Send the POST request with the game data
+        fetch('http://localhost:8000/savegame.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + userId // Pass the user ID or token here, if required
+            },
+            body: JSON.stringify(gameData) // Convert the data object to JSON string
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                console.log('Game data saved successfully:', data.message);
+            } else {
+                console.error('Error saving game data:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('An error occurred while saving game data:', error);
+        });
     }
 
     async flipCard(handContainer, cardIndex, isFaceUp) {
@@ -221,7 +256,6 @@ class BlackjackGame {
         // Update the history table
         this.updateHistoryTable();
 
-        this.gameData.push({ playerHand: this.playerHand, dealerHand: this.dealerHand, result: playerWon, chipsLeft: this.currentChips});
         this.saveGameData();
     }
     generateHandHTML(hand) {
@@ -346,6 +380,8 @@ class BlackjackGame {
     updateHistoryTable() {
         const tableBody = document.getElementById('history-table').getElementsByTagName('tbody')[0];
         tableBody.innerHTML = ''; // Clear the current table content
+
+
 
         // Loop through the history array and create table rows
         this.history.forEach((entry) => {

@@ -244,3 +244,62 @@ button.locked {
 #restart-button:active {
     background-color: #a71d2a; /* Even darker red on click */
 }
+
+
+.container {
+    position: absolute; /* Use absolute positioning */
+    top: 20px; /* Adjust distance from the top of the page */
+    right: 20px; /* Adjust distance from the right of the page */
+    width: 300px; /* Set a fixed width for the form */
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+h2 {
+    text-align: center;
+    color: #333;
+}
+form {
+    display: flex;
+    flex-direction: column;
+}
+label {
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+}
+input[type="text"],
+input[type="password"] {
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+}
+button {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #0056b3;
+}
+.error {
+    color: red;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+.toggle {
+    text-align: center;
+    margin-top: 10px;
+    cursor: pointer;
+    color: #007BFF;
+}
+.toggle:hover {
+    text-decoration: underline;
+}
