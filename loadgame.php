@@ -22,7 +22,7 @@ try {
     if ($gameData) {
         echo json_encode(['message' => 'Game data loaded successfully.', 'data' => $gameData]);
     } else {
-        echo json_encode(['error' => 'No game data found for this user.']);
+        echo json_encode(['message' => 'Empty', 'data' => $gameData]);
     }
 } catch (PDOException $e) {
     echo json_encode(['error' => 'An error occurred while fetching game data.']);

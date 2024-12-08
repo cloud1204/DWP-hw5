@@ -41,7 +41,7 @@ class BlackjackGame {
         this.createDeck();
         this.updateUI();
         this.updateHistoryTable();
-        console.log("inited", history);    
+        console.log("inited", this.history);    
     }
 
     createDeck() {
@@ -50,7 +50,71 @@ class BlackjackGame {
         this.deck = suits.flatMap(suit => values.map(value => ({ suit, value })));
     }
 
+    async saveGameData_cookie() {
+        try {
+
+            const gameData = {
+                currentChips: this.currentChips,
+                history: this.history,
+                round: this.round
+            };
+
+            const response = await fetch('http://localhost:8000/savegame_cookie.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(gameData),
+            });
+            const data = await response.json();
+
+            if (data.error) {
+                console.error('Error saving game data:', data.error);
+                alert(data.error);
+            } else {
+                console.log(data.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    async loadGameData_cookie() {
+        try {
+            const response = await fetch('http://localhost:8000/loadgame_cookie.php', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+
+            const data = await response.json();
+
+            if (!data || !data.data) {
+                return;
+            }
+
+            if (data.error) {
+                console.error('Error loading game data:', data.error);
+                alert(data.error);
+            } else {
+                console.log('Cookie game data loaded:', data.data);
+
+                // Destructure and use the game data
+                const { currentChips, history, round } = data.data;
+
+                this.history = history;
+                this.round = round;
+                this.currentChips = currentChips;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
     async loadGameData() {
+        await sleep(500);
         try {
             const response = await fetch('http://localhost:8000/loadgame.php', {
                 method: 'GET',
@@ -59,12 +123,24 @@ class BlackjackGame {
                 },
             });
 
+            this.playerHand = [];
+            this.dealerHand = [];
+            this.placedBet = 0;
+
             const data = await response.json();
+            console.log("data:", data);
+            if (!data || !data.data) {
+                this.currentChips = 1000;
+                this.history = [];
+                this.round = 0;
+                return;
+            }
 
             if (data.error) {
                 console.error('Error:', data.error);
                 alert(data.error); // Show error message to the user
             } else {
+
                 console.log('Game Data Loaded:', data.data);
 
                 // Handle the game data, for example:
@@ -81,7 +157,7 @@ class BlackjackGame {
         }
     }
 
-    saveGameData(reset = false) {
+    saveGameData() {
 
         // Get the current user data from sessionStorage or cookies??
 
@@ -141,8 +217,18 @@ class BlackjackGame {
         });
     }
 
-    startRound() {
+    async startRound() {
+
+        if (userId == ""){
+            alert("Please login first.");
+            return;
+        }
+
         if (!this.isRoundOver) return;
+
+        await this.loadGameData_cookie();
+        //sleep(200);
+        console.log("loaded cookie:", this.history);
 
         if (this.placedBet == 0){
             this.showBetModal();
@@ -155,17 +241,37 @@ class BlackjackGame {
         document.getElementById("result").textContent = "-----------";
 
         this.playerHand = [this.drawCard(), this.drawCard()];
+
         this.dealerHand = [this.drawCard(), this.drawCard(false)];
+
+        this.currentChips -= this.placedBet;
+
         this.updateUI();
         console.log("starting");
 
         this.unlock();
     }
 
-    drawCard(faceup = true) {
+    drawCard(faceup = true, target = 0) {
         if (this.deck.length == 0){
             this.createDeck(); // reshuffle the deck when used all
         }
+
+        if (target != 0){
+            let tmp = String(target);
+            if (target == 1) tmp = 'A';
+            let used = [];
+            this.playerHand.forEach(card => {
+                if (card.value === tmp) used.push(card.suit);
+            });
+            this.dealerHand.forEach(card => {
+                if (card.value === tmp) used.push(card.suit);
+            });
+            const allsuits = ['Heart', 'Diamond', 'Club', 'Spade'];
+            const available = allsuits.filter(item => !used.includes(item));
+            return {suit: available[0], value: tmp, faceup: faceup};
+        }
+
         const cardIndex = Math.floor(Math.random() * this.deck.length);
         return {...this.deck.splice(cardIndex, 1)[0], faceup};
     }
@@ -207,6 +313,33 @@ class BlackjackGame {
         await sleep(1000); 
         this.revealDealerCards();
         await sleep(1000);
+
+
+        const toggleInput = document.getElementById('toggle');
+
+        const cheatmode = toggleInput.checked ? true : false;
+
+        console.log("cheatmode:", cheatmode);
+
+        let current = this.calculateScore(this.dealerHand);
+
+        if (cheatmode && current <= 10){
+            this.dealerHand.push(this.drawCard(false, 11 - current));
+            this.updateUI();
+            await sleep(1000); 
+            this.revealDealerCards();
+            await sleep(1000);
+            current = this.calculateScore(this.dealerHand);
+        }
+
+        if (cheatmode && current < 21){
+            this.dealerHand.push(this.drawCard(false, 21 - current));
+            this.updateUI();
+            await sleep(1000); 
+            this.revealDealerCards();
+            await sleep(1000);
+        }
+
         while (this.calculateScore(this.dealerHand) < 17) {
             this.dealerHand.push(this.drawCard(false));
             this.updateUI();
@@ -226,14 +359,21 @@ class BlackjackGame {
         else if (dealerScore == playerScore) win = -1;
         else win = dealerScore > 21 || (playerScore > dealerScore && playerScore <= 21);
         console.log("win:", win);
+
+        if (this.deck.length < 10){
+            this.createDeck(); // reshuffle the deck when used all
+        }
+
         this.endRound(win);
 
         //this.unlock();
     }
     endRound(playerWon) {
         this.isRoundOver = true;
+        console.log("playerwon:", playerWon, this.placedBet, this.currentChips);
         if (playerWon == 1) this.currentChips += this.placedBet * 2;
         else if (playerWon == -1) this.currentChips += this.placedBet;
+        console.log("chips:", this.currentChips);
         const bet = this.placedBet;
         this.placedBet = 0;
         this.updateUI(playerWon);
@@ -247,7 +387,11 @@ class BlackjackGame {
             round: this.round,
             bet: bet,
             result: winner,
-            chips: this.currentChips
+            chips: this.currentChips,
+            playercards: this.playerHand.length,
+            dealercards: this.dealerHand.length,
+            playerScore: this.calculateScore(this.playerHand),
+            dealerScore: this.calculateScore(this.dealerHand)
         };
         this.history.push(roundResult);
         if (this.history.length >= 11) {
@@ -257,6 +401,7 @@ class BlackjackGame {
         this.updateHistoryTable();
 
         this.saveGameData();
+        this.saveGameData_cookie();
     }
     generateHandHTML(hand) {
         const cards = hand.map((card, index) => {
@@ -296,7 +441,7 @@ class BlackjackGame {
         `;
         return cards + score_circle;
     }
-    updateUI(win = 0) {
+    updateUI(win = -1) {
         // Display game state, chips, and cards in HTML (implement this in HTML)
         // Display player and dealer hands
 
@@ -315,7 +460,7 @@ class BlackjackGame {
             const dealerScore = this.calculateScore(this.dealerHand);
             const resultText = win == 1 ? "Player Wins!" : (win == 0 ? "Dealer Wins!" : "Tie");
             document.getElementById("result").textContent = resultText;
-            console.log("result:", resultText);
+            //console.log("result:", resultText);
         }
     }
 
@@ -369,7 +514,7 @@ class BlackjackGame {
             console.log(`Player bet: $${betAmount}`);
             // Store the bet in game data or handle it as needed
             this.placedBet = betAmount;
-            this.currentChips -= betAmount;
+            //this.currentChips -= betAmount;
 
             
             // Hide the modal after bet is entered
@@ -390,7 +535,9 @@ class BlackjackGame {
             // Create table cells for each result
             row.innerHTML = `
                 <td>${entry.round}</td>
-                <td>$${entry.bet}</td>
+                <td>${entry.bet}</td>
+                <td>${entry.playercards}, ${entry.dealercards}</td>
+                <td>${entry.playerScore}:${entry.dealerScore}</td>
                 <td>${entry.result}</td>
                 <td>${entry.chips}</td>
             `;
@@ -400,12 +547,23 @@ class BlackjackGame {
     }
 
     restartGame(){
-        this.saveGameData(true);
+        if (userId == ""){
+            alert("Please login first.");
+            return;
+        }
         this.busy = false;
-        this.isRoundOver = false;
+        this.deck = [];
         this.playerHand = [];
         this.dealerHand = [];
+        this.currentChips = 1000;
+        this.placedBet = 0;
+        this.history = [];
+        this.busy = false;
+        this.isRoundOver = true;
+        this.round = 0;
         this.lock();
+        this.saveGameData();
+        this.saveGameData_cookie();
         this.initGame();
         this.isRoundOver = true;
         console.log("reset");

@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'password' => $hashedPassword
         ]);
 
-        echo json_encode(['message' => 'Registration successful.']);
+        echo json_encode(['message' => 'Registration successful. Please login again.']);
     } catch (PDOException $e) {
         echo json_encode(['error' => 'An error occurred while processing your request.']);
     }

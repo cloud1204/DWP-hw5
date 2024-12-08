@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Password is correct, start session
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $username;
-
+            setcookie('gameData', '', time() - 3600, '/');
             echo json_encode(['message' => 'Login successful.', 'user_id' => $user['id']]);
         } else {
             echo json_encode(['error' => 'Invalid username or password.']);
